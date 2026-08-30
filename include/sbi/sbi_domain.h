@@ -352,6 +352,9 @@ int sbi_domain_root_add_memrange(unsigned long addr, unsigned long size,
 /** Startup non-root domains */
 int sbi_domain_startup(struct sbi_scratch *scratch, u32 cold_hartid);
 
+/** Populate domains for the platform */
+int sbi_domain_populate(struct sbi_scratch *scratch);
+
 /** Finalize domain tables */
 int sbi_domain_finalize(struct sbi_scratch *scratch);
 

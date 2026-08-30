@@ -22,6 +22,7 @@
 SBI_LIST_HEAD(domain_list);
 
 static u32 domain_count = 0;
+static bool domain_populated;
 static bool domain_finalized = false;
 
 #define ROOT_REGION_MAX	32
@@ -842,13 +843,13 @@ int sbi_domain_startup(struct sbi_scratch *scratch, u32 cold_hartid)
 	return 0;
 }
 
-int sbi_domain_finalize(struct sbi_scratch *scratch)
+int sbi_domain_populate(struct sbi_scratch *scratch)
 {
 	int rc;
 	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
 
 	/* Sanity checks */
-	if (domain_finalized)
+	if (domain_populated || domain_finalized)
 		return SBI_EINVAL;
 
 	/* Initialize and populate domains for the platform */
@@ -858,6 +859,17 @@ int sbi_domain_finalize(struct sbi_scratch *scratch)
 			   __func__, rc);
 		return rc;
 	}
+
+	domain_populated = true;
+
+	return 0;
+}
+
+int sbi_domain_finalize(struct sbi_scratch *scratch)
+{
+	/* Sanity checks */
+	if (!domain_populated || domain_finalized)
+		return SBI_EINVAL;
 
 	/*
 	 * Set the finalized flag so that the root domain

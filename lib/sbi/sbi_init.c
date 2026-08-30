@@ -359,6 +359,20 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 		sbi_hart_hang();
 	}
 
+	/*
+	 * Note: Populate domains after HSM initialization
+	 * Note: Populate domains before probing drivers so that a driver
+	 * can refer to a domain other than the root domain. Domains are
+	 * not finalized at this point, so a driver can still extend the
+	 * root domain memory regions.
+	 */
+	rc = sbi_domain_populate(scratch);
+	if (rc) {
+		sbi_printf("%s: domain populate failed (error %d)\n",
+			   __func__, rc);
+		sbi_hart_hang();
+	}
+
 	rc = sbi_mpxy_init(scratch);
 	if (rc) {
 		sbi_printf("%s: mpxy init failed (error %d)\n", __func__, rc);
@@ -366,7 +380,6 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 	}
 
 	/*
-	 * Note: Finalize domains after HSM initialization
 	 * Note: Finalize domains before HART PMP configuration so
 	 * that we use correct domain for configuring PMP.
 	 */
