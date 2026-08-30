@@ -44,6 +44,12 @@ config FDT_MPXY_RPMI_MM
 
 endif
 
+config FDT_MPXY_RPMI_REQUEST_FORWARD
+	bool "MPXY driver for RPMI request forward service group"
+	depends on FDT_MPXY
+	select MPXY_REQFWD_QUEUE
+	default n
+
 config MPXY_REQFWD_QUEUE
 	bool "Queue of RPMI messages forwarded to a software agent"
 	default n
