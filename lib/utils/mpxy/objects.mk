@@ -8,6 +8,7 @@
 #
 
 libsbiutils-objs-$(CONFIG_FDT_MPXY) += mpxy/fdt_mpxy.o
+libsbiutils-objs-$(CONFIG_FDT_MPXY) += mpxy/fdt_mpxy_rpmi.o
 libsbiutils-objs-$(CONFIG_FDT_MPXY) += mpxy/fdt_mpxy_drivers.carray.o
 
 libsbiutils-objs-$(CONFIG_FDT_MPXY_RPMI_MBOX) += mpxy/fdt_mpxy_rpmi_mbox.o

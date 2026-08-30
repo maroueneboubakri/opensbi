@@ -45,30 +45,15 @@ static const struct mpxy_rpmi_service_data *mpxy_find_rpmi_srvid(u32 message_id,
 	return NULL;
 }
 
-/** Copy attributes word size */
-static void mpxy_copy_attrs(u32 *outmem, u32 *inmem, u32 count)
-{
-	u32 idx;
-	for (idx = 0; idx < count; idx++)
-		outmem[idx] = cpu_to_le32(inmem[idx]);
-}
-
 static int mpxy_mbox_read_attributes(struct sbi_mpxy_channel *channel,
 				     u32 *outmem, u32 base_attr_id,
 				     u32 attr_count)
 {
 	struct mpxy_rpmi_mbox *rmb =
 		container_of(channel, struct mpxy_rpmi_mbox, channel);
-	u32 *attr_array = (u32 *)&rmb->msgprot_attrs;
-	u32 end_id = base_attr_id + attr_count - 1;
 
-	if (end_id >= MPXY_MSGPROT_RPMI_ATTR_MAX_ID)
-		return SBI_EBAD_RANGE;
-
-	mpxy_copy_attrs(outmem, &attr_array[attr_id2index(base_attr_id)],
-			attr_count);
-
-	return SBI_OK;
+	return mpxy_rpmi_read_attrs(&rmb->msgprot_attrs, outmem,
+				    base_attr_id, attr_count);
 }
 
 /**
