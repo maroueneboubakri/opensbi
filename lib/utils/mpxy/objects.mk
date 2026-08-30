@@ -11,6 +11,9 @@ libsbiutils-objs-$(CONFIG_FDT_MPXY) += mpxy/fdt_mpxy.o
 libsbiutils-objs-$(CONFIG_FDT_MPXY) += mpxy/fdt_mpxy_rpmi.o
 libsbiutils-objs-$(CONFIG_FDT_MPXY) += mpxy/fdt_mpxy_drivers.carray.o
 
+carray-fdt_mpxy_drivers-$(CONFIG_FDT_MPXY_RPMI_REQUEST_FORWARD) += fdt_mpxy_rpmi_reqfwd
+libsbiutils-objs-$(CONFIG_FDT_MPXY_RPMI_REQUEST_FORWARD) += mpxy/fdt_mpxy_rpmi_reqfwd.o
+
 libsbiutils-objs-$(CONFIG_FDT_MPXY_RPMI_MBOX) += mpxy/fdt_mpxy_rpmi_mbox.o
 
 carray-fdt_mpxy_drivers-$(CONFIG_FDT_MPXY_RPMI_CLOCK) += fdt_mpxy_rpmi_clock
