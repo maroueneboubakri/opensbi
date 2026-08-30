@@ -225,6 +225,7 @@ enum rpmi_servicegroup_id {
 	RPMI_SRVGRP_DEVICE_POWER = 0x0009,
 	RPMI_SRVGRP_PERFORMANCE = 0x0000A,
 	RPMI_SRVGRP_MANAGEMENT_MODE = 0x000B,
+	RPMI_SRVGRP_REQUEST_FORWARD = 0x000D,
 	RPMI_SRVGRP_LOGGING = 0x000E,
 	RPMI_SRVGRP_ID_MAX_COUNT,
 
@@ -1044,6 +1045,55 @@ struct rpmi_mm_communicate_req {
 struct rpmi_mm_communicate_rsp {
 	s32 status;
 	u32 mm_comm_retdata_size;
+};
+
+/** RPMI REQUEST_FORWARD ServiceGroup Service IDs */
+enum rpmi_reqfwd_service_id {
+	RPMI_REQFWD_SRV_ENABLE_NOTIFICATION = 0x01,
+	RPMI_REQFWD_SRV_RETRIEVE_CURRENT_MESSAGE = 0x02,
+	RPMI_REQFWD_SRV_COMPLETE_CURRENT_MESSAGE = 0x03,
+	RPMI_REQFWD_SRV_MAX_COUNT,
+};
+
+/** RPMI REQUEST_FORWARD ServiceGroup notification event IDs */
+enum rpmi_reqfwd_event_id {
+	RPMI_REQFWD_EVENT_NEW_MESSAGE = 0x01,
+};
+
+/** RPMI REQUEST_FORWARD retrieve current message request struct */
+struct rpmi_reqfwd_retrieve_current_message_req {
+	u32 start_index;
+};
+
+/**
+ * RPMI REQUEST_FORWARD retrieve current message response struct
+ *
+ * The request_message array carries the returned part of the current
+ * forwarded RPMI request message, which is a complete RPMI message
+ * including its message header.
+ */
+struct rpmi_reqfwd_retrieve_current_message_rsp {
+	s32 status;
+	u32 remaining;
+	u32 returned;
+	u8 request_message[];
+};
+
+/**
+ * RPMI REQUEST_FORWARD complete current message request struct
+ *
+ * The response_data array carries the RPMI message data to be sent as
+ * the response of the current forwarded RPMI request message. Its length
+ * is inferred from the length of the service message.
+ */
+struct rpmi_reqfwd_complete_current_message_req {
+	u8 response_data[];
+};
+
+/** RPMI REQUEST_FORWARD complete current message response struct */
+struct rpmi_reqfwd_complete_current_message_rsp {
+	s32 status;
+	u32 num_messages;
 };
 
 /** RPMI LOGGING ServiceGroup Service IDs */
