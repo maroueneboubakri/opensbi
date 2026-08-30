@@ -178,6 +178,26 @@ done:
 	return rc;
 }
 
+int sbi_ipi_send_hart(u32 hartindex, u32 event, void *data)
+{
+	struct sbi_scratch *scratch = sbi_scratch_thishart_ptr();
+	int rc;
+
+	if (!sbi_hartindex_valid(hartindex))
+		return SBI_EINVAL;
+
+	do {
+		rc = sbi_ipi_send(scratch, hartindex, event, data);
+	} while (rc == SBI_IPI_UPDATE_RETRY);
+
+	if (rc < 0)
+		return rc;
+
+	sbi_ipi_sync(scratch, event);
+
+	return 0;
+}
+
 int sbi_ipi_event_create(const struct sbi_ipi_event_ops *ops)
 {
 	int i, ret = SBI_ENOSPC;

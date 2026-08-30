@@ -76,6 +76,22 @@ struct sbi_ipi_event_ops {
 
 int sbi_ipi_send_many(ulong hmask, ulong hbase, u32 event, void *data);
 
+/**
+ * Send an IPI event to one HART whatever domain it belongs to
+ *
+ * Unlike sbi_ipi_send_many(), the target HART is not restricted to the
+ * domain of the calling HART, so this must only be used for IPI events
+ * created by the SBI implementation itself and never to carry out an SBI
+ * call on behalf of supervisor software.
+ *
+ * @param hartindex index of the HART to send the event to
+ * @param event IPI event created with sbi_ipi_event_create()
+ * @param data event specific data
+ *
+ * @return 0 on success and negative error code on failure
+ */
+int sbi_ipi_send_hart(u32 hartindex, u32 event, void *data);
+
 int sbi_ipi_event_create(const struct sbi_ipi_event_ops *ops);
 
 void sbi_ipi_event_destroy(u32 event);
