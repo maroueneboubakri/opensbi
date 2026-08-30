@@ -44,4 +44,8 @@ config FDT_MPXY_RPMI_MM
 
 endif
 
+config MPXY_REQFWD_QUEUE
+	bool "Queue of RPMI messages forwarded to a software agent"
+	default n
+
 endmenu
