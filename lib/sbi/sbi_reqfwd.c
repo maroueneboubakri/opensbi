@@ -73,6 +73,7 @@ int sbi_reqfwd_send(struct sbi_reqfwd_queue *queue,
 		    unsigned long *rsp_len, unsigned long timeout_us)
 {
 	u64 start, ticks;
+	bool first;
 
 	if (!queue || !fmsg || !msg || !msg_len || !timeout_us)
 		return SBI_EINVAL;
@@ -86,8 +87,17 @@ int sbi_reqfwd_send(struct sbi_reqfwd_queue *queue,
 
 	spin_lock(&queue->lock);
 	sbi_list_add_tail(&fmsg->node, &queue->messages);
+	first = !queue->count;
 	queue->count++;
 	spin_unlock(&queue->lock);
+
+	/*
+	 * Only an arrival in an empty queue is worth reporting: a target
+	 * domain which is already working through the queue reaches this
+	 * message on its own.
+	 */
+	if (first && queue->notify)
+		queue->notify(queue);
 
 	start = sbi_timer_value();
 	ticks = sbi_timer_compute_udelta(timeout_us);

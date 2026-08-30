@@ -229,6 +229,22 @@ domain instance DT node. If **opensbi-domain-instance** DT property is not
 specified then the corresponding MPXY channel is owned by **the ROOT
 domain**.
 
+### Waking A Domain Instance On A Forwarded Request
+
+An MPXY channel serving the RPMI REQUEST_FORWARD service group can raise a
+supervisor software interrupt on the HARTs of the domain owning the channel
+when a forwarded request message arrives in an empty queue. This lets the
+software in that domain wait in **WFI** instead of polling the
+`REQFWD_RETRIEVE_CURRENT_MESSAGE` service.
+
+This is enabled by the optional boolean DT property **opensbi-wakeup-ssip**
+in the MPXY channel DT node. It should only be set if the software running
+in the owner domain expects the interrupt.
+
+Note that this is not the `REQFWD_NEW_MESSAGE` notification of the service
+group. That notification is an RPMI notification message which the SBI MPXY
+extension delivers through an MSI or an SSE event.
+
 ### Domain Configuration Only Accessible to OpenSBI
 
 The software running inside a domain instance should only be aware of

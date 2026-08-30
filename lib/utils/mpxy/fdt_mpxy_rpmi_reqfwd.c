@@ -8,11 +8,16 @@
  */
 
 #include <libfdt.h>
+#include <sbi/riscv_asm.h>
+#include <sbi/riscv_encoding.h>
 #include <sbi/sbi_byteorder.h>
 #include <sbi/sbi_domain.h>
 #include <sbi/sbi_error.h>
+#include <sbi/sbi_hartmask.h>
 #include <sbi/sbi_heap.h>
+#include <sbi/sbi_ipi.h>
 #include <sbi/sbi_reqfwd.h>
+#include <sbi/sbi_scratch.h>
 #include <sbi_utils/fdt/fdt_helper.h>
 #include <sbi_utils/mailbox/rpmi_msgprot.h>
 #include <sbi_utils/mpxy/fdt_mpxy.h>
@@ -50,6 +55,55 @@ struct mpxy_reqfwd {
 	struct sbi_mpxy_channel channel;
 	struct sbi_reqfwd_queue queue;
 };
+
+/**
+ * Doorbell telling the owner domain that its queue went from empty to
+ * non-empty, raised as a supervisor software interrupt on the HARTs of
+ * that domain.
+ *
+ * This is not the REQFWD_NEW_MESSAGE notification of the service group:
+ * that one is an RPMI notification message and SBI MPXY delivers such
+ * messages through an MSI or an SSE event, neither of which is wired up
+ * here. It is an OpenSBI specific doorbell which lets the software in the
+ * owner domain wait in WFI instead of polling
+ * REQFWD_RETRIEVE_CURRENT_MESSAGE, and it is only armed when the device
+ * tree says that software expects it.
+ */
+static void mpxy_reqfwd_ipi_process(struct sbi_scratch *scratch)
+{
+	csr_set(CSR_MIP, MIP_SSIP);
+}
+
+static const struct sbi_ipi_event_ops mpxy_reqfwd_ipi_ops = {
+	.name = "IPI_REQFWD",
+	.process = mpxy_reqfwd_ipi_process,
+};
+
+static u32 mpxy_reqfwd_ipi_event = SBI_IPI_EVENT_MAX;
+
+static void mpxy_reqfwd_notify(struct sbi_reqfwd_queue *queue)
+{
+	struct mpxy_reqfwd *rf =
+		container_of(queue, struct mpxy_reqfwd, queue);
+	u32 self = current_hartindex();
+	struct sbi_hartmask mask;
+	u32 i;
+
+	if (sbi_domain_get_assigned_hartmask(rf->channel.owner_domain, &mask))
+		return;
+
+	/*
+	 * Which HART of the owner domain is waiting for messages is not
+	 * known here, so wake all of them and let them find an empty queue
+	 * if they race. The producer is never one of them, a HART belongs
+	 * to one domain only, but check anyway rather than raise SSIP on
+	 * the caller.
+	 */
+	sbi_hartmask_for_each_hartindex(i, &mask) {
+		if (i != self)
+			sbi_ipi_send_hart(i, mpxy_reqfwd_ipi_event, NULL);
+	}
+}
 
 static int mpxy_reqfwd_read_attributes(struct sbi_mpxy_channel *channel,
 				       u32 *outmem, u32 base_attr_id,
@@ -250,6 +304,16 @@ static int mpxy_reqfwd_init(const void *fdt, int nodeoff,
 	rf->msgprot_attrs.servicegrp_ver = MPXY_REQFWD_SRVGRP_VERSION;
 	rf->msgprot_attrs.impl_id = MPXY_REQFWD_IMPL_ID;
 	rf->msgprot_attrs.impl_ver = MPXY_REQFWD_IMPL_VERSION;
+
+	if (fdt_getprop(fdt, nodeoff, "opensbi-wakeup-ssip", NULL)) {
+		if (mpxy_reqfwd_ipi_event == SBI_IPI_EVENT_MAX) {
+			rc = sbi_ipi_event_create(&mpxy_reqfwd_ipi_ops);
+			if (rc < 0)
+				goto fail_free;
+			mpxy_reqfwd_ipi_event = rc;
+		}
+		rf->queue.notify = mpxy_reqfwd_notify;
+	}
 
 	rc = sbi_reqfwd_register_queue(&rf->queue, target);
 	if (rc)

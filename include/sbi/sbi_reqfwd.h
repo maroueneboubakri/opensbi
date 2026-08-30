@@ -70,10 +70,19 @@ struct sbi_reqfwd_queue {
 	struct sbi_dlist messages;
 	/** Number of messages in the list */
 	unsigned long count;
+	/**
+	 * Optional callback telling the target domain that a message
+	 * arrived in an empty queue. It is called without the queue lock
+	 * held and must be set before the queue is registered.
+	 */
+	void (*notify)(struct sbi_reqfwd_queue *queue);
 };
 
 /**
  * Register the forwarded message queue of a target domain
+ *
+ * The optional notify callback of the queue must already be set, this
+ * function does not touch it.
  *
  * @param queue message queue to register
  * @param target domain consuming the messages of the queue
