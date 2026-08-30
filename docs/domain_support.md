@@ -217,6 +217,18 @@ value of DT property **opensbi-domain** is the DT phandle of the domain
 instance DT node. If **opensbi-domain** DT property is not specified then
 corresponding HART is assigned to **the ROOT domain**.
 
+### Assigning An MPXY Channel To Domain Instance
+
+By default, an MPXY channel is owned by **the ROOT domain** and is only
+visible to the software running in **the ROOT domain**.
+
+The owner domain of an MPXY channel can be specified using the optional
+DT property **opensbi-domain-instance** in the MPXY channel DT node. The
+value of DT property **opensbi-domain-instance** is the DT phandle of the
+domain instance DT node. If **opensbi-domain-instance** DT property is not
+specified then the corresponding MPXY channel is owned by **the ROOT
+domain**.
+
 ### Domain Configuration Only Accessible to OpenSBI
 
 The software running inside a domain instance should only be aware of

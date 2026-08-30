@@ -16,6 +16,7 @@
 #include <sbi/sbi_hartmask.h>
 #include <sbi/sbi_heap.h>
 #include <sbi/sbi_scratch.h>
+#include <sbi/sbi_string.h>
 #include <sbi_utils/fdt/fdt_domain.h>
 #include <sbi_utils/fdt/fdt_helper.h>
 
@@ -533,6 +534,35 @@ fail_free_regions:
 fail_free_domain:
 	sbi_free(dom);
 	return err;
+}
+
+struct sbi_domain *fdt_domain_get(const void *fdt, int domain_offset)
+{
+	struct sbi_domain *dom;
+	const char *name;
+
+	if (!fdt || domain_offset < 0)
+		return NULL;
+
+	if (fdt_node_check_compatible(fdt, domain_offset,
+				      "opensbi,domain,instance"))
+		return NULL;
+
+	name = fdt_get_name(fdt, domain_offset, NULL);
+	if (!name)
+		return NULL;
+
+	/*
+	 * __fdt_parse_domain() names each domain after its DT node and
+	 * all domain instance DT nodes are siblings under the domain
+	 * configuration DT node, so the name identifies the domain.
+	 */
+	sbi_domain_for_each(dom) {
+		if (!sbi_strncmp(dom->name, name, sizeof(dom->name) - 1))
+			return dom;
+	}
+
+	return NULL;
 }
 
 int fdt_domains_populate(const void *fdt)

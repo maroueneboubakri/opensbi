@@ -300,7 +300,11 @@ int mpxy_rpmi_mbox_init(const void *fdt, int nodeoff, const struct fdt_match *ma
 	/* Channel ID*/
 	rmb->channel.channel_id = channel_id;
 	/* Set the owner domain */
-	rmb->channel.owner_domain = &root;
+	rmb->channel.owner_domain = fdt_mpxy_get_owner_domain(fdt, nodeoff);
+	if (!rmb->channel.owner_domain) {
+		rc = SBI_EINVAL;
+		goto fail_free_chan;
+	}
 	/* Callback for read RPMI attributes */
 	rmb->channel.read_attributes = mpxy_mbox_read_attributes;
 	/* Callback for write RPMI attributes */

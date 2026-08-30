@@ -72,10 +72,28 @@ void fdt_domain_fixup(void *fdt);
  */
 int fdt_domains_populate(const void *fdt);
 
+/**
+ * Find the domain registered for a domain instance DT node
+ *
+ * This only works after the domains have been populated, so callers
+ * must not use it before the platform domains_init() operation has run.
+ *
+ * @param fdt device tree blob
+ * @param domain_offset domain instance DT node offset
+ *
+ * @return pointer to the domain or NULL if not found
+ */
+struct sbi_domain *fdt_domain_get(const void *fdt, int domain_offset);
+
 #else
 
 static inline void fdt_domain_fixup(void *fdt) { }
 static inline int fdt_domains_populate(const void *fdt) { return 0; }
+static inline struct sbi_domain *fdt_domain_get(const void *fdt,
+						int domain_offset)
+{
+	return NULL;
+}
 
 #endif
 
